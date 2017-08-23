@@ -410,3 +410,26 @@ msgctxt "#30528"
 msgid "Radio: Following"
 msgstr ""
 
+msgctxt "#30600"
+msgid "HTTP Proxy"
+msgstr ""
+
+msgctxt "#30610"
+msgid "Use Proxy"
+msgstr ""
+
+msgctxt "#30620"
+msgid "Proxy Host"
+msgstr ""
+
+msgctxt "#30630"
+msgid "Proxy Port"
+msgstr ""
+
+msgctxt "#30640"
+msgid "Proxy Username"
+msgstr ""
+
+msgctxt "#30650"
+msgid "Proxy Password"
+msgstr ""

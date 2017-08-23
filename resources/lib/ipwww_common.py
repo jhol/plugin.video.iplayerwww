@@ -174,7 +174,8 @@ def SignInBBCiD():
     p = re.compile('form method="post" action="([^""]*)"')
     
     with requests.Session() as s:
-        resp = s.get('https://www.bbc.com/', headers=headers)
+        resp = s.get('https://www.bbc.com/', headers=headers,
+            proxies={'http': GetProxyURL()} if UseProxy() else None)
 
         # Call the login page to get a 'nonce' for actual login
         signInUrl = 'https://session.bbc.com/session'
@@ -190,7 +191,8 @@ def SignInBBCiD():
         cookie_jar.save(ignore_discard=True)
     
     with requests.Session() as s:
-        resp = s.get('https://www.bbc.co.uk/iplayer', headers=headers)
+        resp = s.get('https://www.bbc.co.uk/iplayer', headers=headers,
+            proxies={'http': GetProxyURL()} if UseProxy() else None)
 
         # Call the login page to get a 'nonce' for actual login
         signInUrl = 'https://www.bbc.co.uk/session'
@@ -224,7 +226,8 @@ def SignOutBBCiD():
 
 def StatusBBCiD():
     r = requests.head("https://account.bbc.com/account", cookies=cookie_jar,
-                      headers=headers, allow_redirects=False)
+                      headers=headers, allow_redirects=False,
+                      proxies={'http': GetProxyURL()} if UseProxy() else None)
     if r.status_code == 200:
         return True
     else: 
@@ -255,9 +258,51 @@ def CheckLogin(logged_in):
     return False
 
 
+def UseProxy():
+    try:
+        if ADDON.getSetting('proxy_use') == 'true':
+            return True
+    except: pass
+    return False
+
+def SetListItemProxyProperties(list_item):
+    if UseProxy():
+	list_item.setProperty('proxy.type', 'http')
+	list_item.setProperty('proxy.host', ADDON.getSetting('proxy_host'))
+	list_item.setProperty('proxy.port', ADDON.getSetting('proxy_port'))
+	list_item.setProperty('proxy.user', ADDON.getSetting('proxy_user'))
+	list_item.setProperty('proxy.password', ADDON.getSetting('proxy_pass'))
+
+
+def GetProxyURL():
+    proxy_host = None
+    proxy_port = 8080
+    proxy_user = None
+    proxy_pass = None
+
+    try:
+        proxy_host = ADDON.getSetting('proxy_host')
+        proxy_port = int(ADDON.getSetting('proxy_port'))
+        proxy_user = ADDON.getSetting('proxy_user')
+        proxy_pass = ADDON.getSetting('proxy_pass')
+    except:
+        pass
+
+    proxy = 'http://'
+    if proxy_user:
+        if proxy_pass:
+            proxy += '%s:%s@' % (proxy_user, proxy_pass)
+        else:
+            proxy += '%s@' % proxy_user
+    proxy += '%s:%d' % (proxy_host, proxy_port)
+
+    return proxy
+
+
 def OpenURL(url):
     try:
-        r = requests.get(url, headers=headers, cookies=cookie_jar)
+        r = requests.get(url, headers=headers, cookies=cookie_jar,
+                proxies={'http': GetProxyURL()} if UseProxy() else None)
     except requests.exceptions.RequestException as e:
         dialog = xbmcgui.Dialog()
         dialog.ok(translation(30400), "%s" % e)
@@ -283,7 +328,8 @@ def OpenURLPost(url, post_data):
                    'Content-Type':'application/x-www-form-urlencoded'}
     try:
         r = requests.post(url, headers=headers_ssl, data=post_data, allow_redirects=False,
-                          cookies=cookie_jar)
+                          cookies=cookie_jar,
+                          proxies={'http': GetProxyURL()} if UseProxy() else None)
     except requests.exceptions.RequestException as e:
         dialog = xbmcgui.Dialog()
         dialog.ok(translation(30400), "%s" % e)
